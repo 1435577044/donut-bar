@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Donut-bar 1.0.0 交付说明（第一个正式版）</title>
+<style>
+  :root{
+    --bg:#f7f8fa; --card:#fff; --line:#e3e6ea; --line2:#eef0f3;
+    --tx:#1c1f23; --tx2:#5b636d; --tx3:#8a929c;
+    --ok:#1a7f4b; --okbg:#eaf7f0; --warn:#9a6a00; --warnbg:#fdf5e3;
+    --accent:#1f5fbf; --accentbg:#eef3fb;
+    --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Cascadia Mono",monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--tx);
+    font:15px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei",sans-serif}
+  .wrap{max-width:1010px;margin:0 auto;padding:40px 24px 72px}
+  header{border-bottom:1px solid var(--line);padding-bottom:22px;margin-bottom:26px}
+  h1{margin:0 0 10px;font-size:25px;letter-spacing:.2px}
+  .sub{color:var(--tx2);font-size:13.5px;display:flex;flex-wrap:wrap;gap:6px 18px}
+  .sub b{font-weight:600;color:var(--tx)}
+  h2{font-size:18px;margin:36px 0 14px;padding-left:11px;border-left:3px solid var(--accent)}
+  h3{font-size:15px;margin:22px 0 10px}
+  p{margin:10px 0}
+  table{width:100%;border-collapse:collapse;margin:14px 0;font-size:14px;background:var(--card);
+    border:1px solid var(--line);border-radius:8px;overflow:hidden}
+  th,td{padding:9px 13px;text-align:left;border-bottom:1px solid var(--line2);vertical-align:top}
+  th{background:#f2f4f7;font-weight:600;font-size:13px;color:var(--tx2);white-space:nowrap}
+  tr:last-child td{border-bottom:none}
+  td.num,th.num{text-align:right;font-family:var(--mono);font-size:13px;white-space:nowrap}
+  code{font-family:var(--mono);font-size:12.5px;background:#f0f2f5;padding:1.5px 5px;border-radius:4px;
+    word-break:break-all}
+  pre{font-family:var(--mono);font-size:12.5px;background:#f8f9fb;border:1px solid var(--line);
+    border-radius:8px;padding:14px 16px;overflow-x:auto;line-height:1.6;margin:12px 0}
+  .tag{display:inline-block;font-size:11.5px;font-weight:600;padding:2px 8px;border-radius:20px;
+    white-space:nowrap;line-height:1.7}
+  .t-ok{color:var(--ok);background:var(--okbg)}
+  .t-warn{color:var(--warn);background:var(--warnbg)}
+  .t-info{color:var(--accent);background:var(--accentbg)}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin:16px 0}
+  .kpi{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:15px 17px}
+  .kpi .k{font-size:12.5px;color:var(--tx3);margin-bottom:5px}
+  .kpi .v{font-size:20px;font-weight:600;font-family:var(--mono);letter-spacing:-.3px}
+  .kpi .n{font-size:12px;color:var(--tx2);margin-top:3px}
+  ul,ol{margin:10px 0;padding-left:22px}
+  li{margin:5px 0}
+  .note{background:var(--accentbg);border:1px solid #d5e2f7;border-radius:8px;padding:13px 16px;
+    font-size:13.5px;margin:14px 0}
+  .verdict{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--ok);
+    border-radius:8px;padding:16px 20px;margin:16px 0}
+  footer{margin-top:44px;padding-top:18px;border-top:1px solid var(--line);color:var(--tx3);font-size:12.5px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>Donut-bar 1.0.0 — 第一个正式版</h1>
+  <div class="sub">
+    <span>包标识 <b>com.dao.donutbar</b></span>
+    <span>架构 <b>iphoneos-arm64e</b></span>
+    <span>基准 <b>4.0.6</b></span>
+    <span>产物 <b>donut-bar100.deb</b></span>
+  </div>
+</header>
+
+<div class="verdict">
+  <b>本次只改两件事</b>：① 横条上下偏移默认 <b>78 → 80</b>；② 版本号 <b>4.0.6 → 1.0.0</b>。
+  其余一切不变 —— 已用逐字节最小差异验证证明：除这两处及其签名连锁外，
+  <b>3 个图标逐字节相同</b>，注入逻辑一字未动。
+</div>
+
+<div class="grid">
+  <div class="kpi"><div class="k">默认横条偏移</div><div class="v">Y = 80</div><div class="n">滑块范围 [40,120]，默认居中</div></div>
+  <div class="kpi"><div class="k">版本号</div><div class="v">1.0.0</div><div class="n">第一个正式版</div></div>
+  <div class="kpi"><div class="k">体积</div><div class="v">29558 B</div><div class="n">与 4.0.6 基本持平（−10 B）</div></div>
+  <div class="kpi"><div class="k">验证</div><div class="v">6/6 全绿</div><div class="n">含二进制级独立核对</div></div>
+</div>
+
+<h2>1. 改动一：横条上下偏移默认回到 80</h2>
+
+<p>这是一次<strong>精确回退</strong> —— 之前（内部版本 4.0.1）把默认值从 80 改成 78 时同步改了三个地方，
+本次逐一改回，不多不少：</p>
+
+<table>
+  <tr><th>位置</th><th>4.0.6</th><th>1.0.0</th><th>作用</th></tr>
+  <tr><td>dylib <code>DEFAULTS[1]</code></td><td class="num">78</td><td class="num"><b>80</b></td>
+      <td>加载期写入的默认 Y</td></tr>
+  <tr><td>Root.plist 的 Y 滑块</td><td class="num">[38,118] 默认 78</td><td class="num"><b>[40,120] 默认 80</b></td>
+      <td>面板上的把手位置（保持「默认值 = 范围正中」）</td></tr>
+  <tr><td><code>DEAD_STR</code> 默认值载体键</td><td class="num">'78'</td><td class="num"><b>'80'</b></td>
+      <td>「恢复默认设置」按钮写回的值</td></tr>
+</table>
+
+<h3>为什么改默认值不会连带移动标定基准</h3>
+<p>这是本次唯一需要判断的地方。glue 的实际定位公式是：</p>
+<pre>center_y = ringC_y + (Y − KEY_Y)        KEY_Y = 5（标定量，未动）</pre>
+<p>而构建脚本里另有 <code>Y_CTR = DEFAULTS[1]</code> 与 <code>DY_INT = Y_CTR − KEY_Y</code>。
+把两式合起来看：</p>
+<pre>DY_INT + (Y − Y_CTR) = (Y_CTR − KEY_Y) + Y − Y_CTR = Y − KEY_Y</pre>
+<p><strong><code>Y_CTR</code> 完全抵消</strong>，而且已 grep 确认 <code>DX_INT</code>/<code>DY_INT</code>
+在本脚本内<strong>未参与任何代码生成</strong>（仅用于注释）。因此改 <code>DEFAULTS[1]</code>
+只改变「默认位置的数值」，不会动标定基准 —— <strong>默认位置比 4.0.1~4.0.6 下移 2pt，回到 4.0.0 标定的位置。</strong></p>
+
+<div class="note">
+  <b>已在脚本里加了防漂移断言</b>：构建时强制校验
+  <code>2 × 默认值 == 最小值 + 最大值</code>（默认值必须落在范围正中）与
+  <code>滑块默认值 == DEFAULTS[i]</code>（三处同步）。任一处漏改会直接构建失败，不会静默出错。
+</div>
+
+<h2>2. 改动二：版本号 1.0.0</h2>
+<p>版本号只有一个来源（脚本 <code>VERSION</code> 常量），它同时决定
+<code>control</code> 的 <code>Version:</code> 与插件设置页顶部横幅的版本槽。
+<code>'1.0.0'</code> 与 <code>'4.0.6'</code> 同为 5 字符，因此<strong>原地改写</strong>即可，
+不需要动用为 ≥6 字符准备的指针重定向方案。</p>
+
+<h2>3. 验证：六道关卡全绿</h2>
+
+<table>
+  <tr><th>#</th><th>关卡</th><th>脚本</th><th>结果</th></tr>
+  <tr><td>1</td><td>默认值 / 版本专项</td><td><code>_fix2/verify_style21.py</code></td><td><span class="tag t-ok">FAIL 0</span></td></tr>
+  <tr><td>2</td><td>四维度代码审查</td><td><code>_fix2/review_all4.py</code></td><td><span class="tag t-ok">问题 0 项</span></td></tr>
+  <tr><td>3</td><td>结构审计</td><td><code>scripts/audit.py</code></td><td><span class="tag t-ok">FAIL 0</span> <span class="tag t-warn">WARN 1</span></td></tr>
+  <tr><td>4</td><td>重定位校验</td><td><code>scripts/verify_reloc.py</code></td><td><span class="tag t-ok">FAIL 0</span></td></tr>
+  <tr><td>5</td><td>构建幂等</td><td><code>_fix2/idem100.py</code></td><td><span class="tag t-ok">逐字节一致</span></td></tr>
+  <tr><td>6</td><td>最小差异</td><td><code>_fix2/diff_406_100.py</code></td><td><span class="tag t-ok">PASS</span></td></tr>
+</table>
+
+<h3>关键项是「从二进制里读回来」而不是复述构建日志</h3>
+<p>改默认值这类改动最容易出的错是「日志显示改了、实际没生效」。因此专项验证直接反汇编产出二进制：</p>
+<ul>
+  <li><code>prefs_to_rect</code> 的 4 个默认值立即数 = <b>[40, 80, 30, 6]</b>（两切片）</li>
+  <li><b>「恢复默认」按钮实际引用的 CFString</b> = <code>['40','80','30','6']</code>，
+      并与配对的键 <code>['pfDonutDot','#EB4D3DFF','#','#FFFFFF']</code> 一一对应
+      （解析 <code>adrp+add</code> 指令对 → 查 <code>__cfstring</code> 表得到）</li>
+  <li>版本槽内容 = <code>'1.0.0'</code>，且原始串 <code>v2.0.3</code> <b>已无残留</b></li>
+  <li>标定常量 <code>KEY_X=76</code> / <code>KEY_Y=5</code> 各只出现 1 处（未被牵连）</li>
+</ul>
+
+<h3>最小差异（4.0.6 → 1.0.0）：每一处都能归因</h3>
+<table>
+  <tr><th>文件</th><th>差异</th><th>性质</th></tr>
+  <tr><td><code>Donut.dylib</code></td>
+      <td>每切片 3 处：<code>0x7c70</code> 的 <b>2 字节</b>（<code>mov x0,#78</code>→<code>#80</code>）
+      + 20 B + 32 B 签名页哈希</td><td><span class="tag t-ok">预期</span></td></tr>
+  <tr><td><code>DonutPrefs</code></td>
+      <td>每切片 5 处：<code>__cstring</code> 里 <code>'78'</code>→<code>'80'</code>、
+      <code>'4.0.6'</code>→<code>'1.0.0'</code>（1+1 字节，中间的 <code>.0.</code> 相同）
+      + 20 B + 32 B 签名页哈希</td><td><span class="tag t-ok">预期</span></td></tr>
+  <tr><td><code>Root.plist</code></td><td>1296 → 1288 B（Y 滑块的 min/max/default）</td>
+      <td><span class="tag t-ok">预期</span></td></tr>
+  <tr><td><code>control</code></td><td>仅 <code>Version:</code> 行</td><td><span class="tag t-ok">预期</span></td></tr>
+  <tr><td>3 个图标 PNG</td><td><b>逐字节相同</b></td><td><span class="tag t-ok">未动体积优化</span></td></tr>
+</table>
+
+<p style="color:var(--tx2);font-size:13.5px">
+那 20 B / 32 B 是 <b>签名被正确重算</b>的证据（改动的字节落在代码页内，两个 CodeDirectory
+各自的页摘要都要更新，长度恰好等于该算法的 hashSize）。若差异出现在签名区之外又解释不清，就不该交付。
+</p>
+
+<h2>4. 交付与复现</h2>
+<table>
+  <tr><th>项</th><th>值</th></tr>
+  <tr><td>交付包</td><td><code>E:\deb\donut-bar100.deb</code></td></tr>
+  <tr><td>体积</td><td>29558 B</td></tr>
+  <tr><td>sha256</td><td><code>28928995c5f78e09dfe05f6df7338255f81fda04bec4d6b0fdd24aef519cfd39</code></td></tr>
+  <tr><td>构建入口</td><td><code>_fix2/patch_donut36.py</code>（由 <code>_fix2/apply_style23.py</code> 生成）</td></tr>
+  <tr><td>回退版本</td><td><code>E:\deb\donut-bar406.deb</code></td></tr>
+</table>
+
+<h3>复现命令</h3>
+<pre>PY="C:/Users/&lt;用户&gt;/.workbuddy/binaries/python/envs/default/Scripts/python.exe"
+
+PYTHONIOENCODING=utf-8 "$PY" _fix2/patch_donut36.py        # 构建（幂等）
+PYTHONIOENCODING=utf-8 "$PY" _fix2/verify_style21.py       # 默认值/版本专项
+PYTHONIOENCODING=utf-8 "$PY" _fix2/review_all4.py          # 四维度审查
+PYTHONIOENCODING=utf-8 "$PY" _fix2/diff_406_100.py         # 最小差异
+PYTHONIOENCODING=utf-8 "$PY" _fix2/idem100.py              # 幂等
+PYTHONIOENCODING=utf-8 "$PY" &lt;技能目录&gt;/scripts/audit.py E:/deb/donut-bar100.deb E:/deb/_fix2/Donut_RootHide_2.0.3.deb
+PYTHONIOENCODING=utf-8 "$PY" &lt;技能目录&gt;/scripts/verify_reloc.py E:/deb/_fix2/Donut_RootHide_2.0.3.deb E:/deb/donut-bar100.deb</pre>
+
+<h3>需要一并同步的信息</h3>
+<p>本机 <code>E:\deb\.workbuddy\memory\MEMORY.md</code> 是<strong>只读</strong>的（写入报
+<code>PermissionError</code> / <code>os error 87</code>），本次无法就地更新，已把待补内容记入当日日志
+<code>.workbuddy/memory/2026-09-26_v100.md</code>。该文件里与本次不符的两处旧记载：</p>
+<ul>
+  <li>「当前交付 3.1.0 … 默认 X=40/Y=80」→ 应改为 <b>1.0.0</b>，并补上滑块范围
+      <code>X[0,80] Y[40,120] W[2,58] H[2,10]</code></li>
+  <li>「恢复默认」写回值写的是 <code>&lt;38/78/30/6&gt;</code> → 实际为 <b><code>&lt;40/80/30/6&gt;</code></b></li>
+</ul>
+
+<h2>5. 未做真机验证</h2>
+<p>上述结论全部来自静态核验。默认值从 78 改到 80 会让横条默认位置<b>下移 2pt</b>，
+这是本次唯一的外观变化 —— 值得在真机上确认一次位置符合预期。
+若出现异常，请提供 <code>/var/mobile/Library/Logs/CrashReporter/</code> 下对应的 <code>.ips</code>。</p>
+
+<footer>
+  Donut-bar 1.0.0 · 交付说明 · 2026-09-26<br>
+  基于刀刀源的 Donut、BadgeBar 显示效果，并向所有贡献者致谢。
+</footer>
+
+</div>
+</body>
+</html>
