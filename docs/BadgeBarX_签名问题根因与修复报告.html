@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BadgeBar X 不生效 · 根因定位与修复报告</title>
+<style>
+  :root{
+    --bg:#f6f7f9; --panel:#ffffff; --ink:#1b1f24; --muted:#5d6673;
+    --line:#e3e6ea; --accent:#c0392b; --ok:#1e7f4f; --warn:#a86400; --info:#1f5fa8;
+    --mono:"SF Mono",Consolas,"Cascadia Mono","DejaVu Sans Mono",monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+       font:15px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif}
+  .wrap{max-width:1000px;margin:0 auto;padding:32px 20px 64px}
+  header{background:linear-gradient(135deg,#1b1f24,#39424e);color:#fff;border-radius:14px;
+         padding:28px 30px;margin-bottom:22px}
+  header h1{margin:0 0 8px;font-size:24px;letter-spacing:.2px}
+  header .sub{color:#c3ccd8;font-size:14px}
+  header .tag{display:inline-block;margin-top:14px;margin-right:8px;padding:4px 11px;border-radius:999px;
+              background:rgba(255,255,255,.14);color:#fff;font-size:12.5px}
+  h2{font-size:19px;margin:34px 0 12px;padding-left:12px;border-left:4px solid var(--accent)}
+  h3{font-size:15.5px;margin:22px 0 8px;color:#2b333d}
+  p{margin:10px 0}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px 20px;margin:14px 0;
+        box-shadow:0 1px 2px rgba(18,25,35,.04)}
+  table{width:100%;border-collapse:collapse;margin:12px 0;font-size:13.6px;background:#fff;
+        border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  th,td{padding:9px 11px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+  th{background:#eef1f4;font-weight:600;color:#2b333d;white-space:nowrap}
+  tr:last-child td{border-bottom:none}
+  code,pre{font-family:var(--mono);font-size:12.8px}
+  code{background:#eef1f4;padding:1.5px 5px;border-radius:4px}
+  pre{background:#1e242b;color:#e6edf3;padding:14px 16px;border-radius:10px;overflow-x:auto;line-height:1.6}
+  pre .c{color:#8fa3b8}
+  .ok{color:var(--ok);font-weight:600}
+  .bad{color:var(--accent);font-weight:600}
+  .warn{color:var(--warn);font-weight:600}
+  .muted{color:var(--muted)}
+  ul,ol{margin:10px 0 10px 22px;padding:0}
+  li{margin:5px 0}
+  .kv{display:grid;grid-template-columns:190px 1fr;gap:6px 14px;font-size:13.8px}
+  .kv b{color:#39424e;font-weight:600}
+  .pill{display:inline-block;padding:2px 9px;border-radius:999px;font-size:12px;font-weight:600}
+  .pill.bad{background:#fdecea;color:#a5281b}
+  .pill.ok{background:#e8f6ee;color:#186b43}
+  .pill.info{background:#e8f0fb;color:#1b5299}
+  .flow{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin:14px 0}
+  .flow pre{background:#f4f6f8;color:#26303b;border:1px solid var(--line)}
+  footer{margin-top:40px;padding-top:16px;border-top:1px solid var(--line);color:var(--muted);font-size:12.6px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>BadgeBar X 1.3.7 · 「不生效 / 设置面板报错」根因定位与修复</h1>
+  <div class="sub">设备：iPhone 15 Pro Max（A17 Pro / arm64e）· iOS 17.2.1 · Relaxin（RootHide 隐根）</div>
+  <div>
+    <span class="tag">根因：代码签名格式过旧</span>
+    <span class="tag">产出：v5（双 CodeDirectory）</span>
+    <span class="tag">4 切片 × 2 算法全部校验通过</span>
+  </div>
+</header>
+
+<h2>一、结论先说</h2>
+<div class="card">
+  <p>你截图里那句 <code>code signature invalid</code> <b>就是「不生效」的唯一原因</b>。路径、目录布局、依赖全都正常——文件被找到了、dyld 也读到了它，只是 <b>签名校验没通过，内核直接拒绝加载</b>。</p>
+  <p>而设置面板与插件本体<b>硬链接同一批依赖、共用同一套签名</b>，所以同一个病因同时造成了两个现象：</p>
+  <ul>
+    <li>设置面板 → 弹错误框（你看到的截图）</li>
+    <li>插件本体 <code>BadgeBar.dylib</code> → <b>静默不生效</b>（SpringBoard 里没加载成功，不会有任何提示）</li>
+  </ul>
+  <p class="warn">我上两轮把原因归到「缺依赖库」，那个方向是错的。真正的问题是签名格式——本轮已用你提供的 Donut 参照包逐字节比对确认。</p>
+</div>
+
+<h2>二、报错原文里藏着三条决定性线索</h2>
+<div class="flow">
+<pre>dlopen(/var/.../.jbroot-ACEA4A1C69BED017/Library/PreferenceBundles/
+       BadgeBarPrefs.bundle/BadgeBarPrefs, 0x0109): tried:
+  '.../BadgeBarPrefs' (<b>code signature invalid</b> in &lt;1CB36F14-AAE5-36A6-8B5E-6DD74B5A18AE&gt;
+                       (errno=1) sliceOffset=0x00014000,
+                       codeBlobOffset=0x0000CBB0, codeBlobSize=0x000001A0)
+  '/private/preboot/Cryptexes/OS/...' (no such file), ...</pre>
+<div class="kv">
+  <b>路径解析成功</b><span class="ok">✔ 说明 <code>.jbroot</code> 符号链接已由 dpkg 正确创建，目录布局与 <code>@loader_path/.jbroot/…</code> 写法都没问题</span>
+  <b>sliceOffset=0x14000</b><span class="ok">✔ 命中的是 <b>arm64e 切片</b>（A17 Pro 真正执行的那一片）</span>
+  <b>errno=1 (EPERM)</b><span class="bad">✘ AMFI 校验签名失败并拒绝加载 —— 这是唯一实质错误</span>
+  <b>&lt;1CB36F14-…&gt;</b><span class="ok">✔ 这是镜像 UUID，我实测它<b>正好等于</b> BadgeBarPrefs arm64e 切片的 LC_UUID，证实设备上跑的就是这个二进制</span>
+  <b>codeBlobSize=0x1A0</b><span class="ok">✔ 与包里 <code>LC_CODE_SIGNATURE.datasize=0x1a0</code> 完全一致（旧签名的尺寸）</span>
+</div>
+</div>
+
+<h2>三、根因：签名是 2019 年的老格式，iOS 17 不认</h2>
+<p>我把 roothide 官方源上的 <b>12 个真实隐根插件包</b>（含你给的 Donut 2.0.3）全部解包，逐字节读它们的 CodeDirectory，结果<b>12/12 完全一致</b>，而原包 / 我之前的产物是一个异类：</p>
+
+<table>
+  <thead><tr><th>签名属性</th><th>12 个官方隐根包（可正常工作）</th><th>原包 / 我的 v1–v4</th></tr></thead>
+  <tbody>
+    <tr><td>CodeDirectory 版本</td><td class="ok">0x20400（全部）</td><td class="bad">0x20001（2019 年 ldid 老格式）</td></tr>
+    <tr><td>是否含 SHA-256 的 CD</td><td class="ok">12/12 都有</td><td class="bad">一个都没有</td></tr>
+    <tr><td>哈希算法</td><td class="ok">SHA-256（+ 部分含 SHA-1 双份）</td><td class="bad">仅 SHA-1</td></tr>
+    <tr><td>execSeg 字段</td><td class="ok">有（<code>execSegLimit = __TEXT.vmSize</code>）</td><td class="bad">老版本头里根本没有这些字段</td></tr>
+    <tr><td>页哈希自校验</td><td class="ok">全部 0 失败</td><td>自洽（但不是 iOS 17 认的格式）</td></tr>
+  </tbody>
+</table>
+
+<h3>Donut 的签名布局（逐字节读出来的，作为标准答案）</h3>
+<div class="flow">
+<pre>SuperBlob (count=3)
+├─ idx[0] type=0x0000  CodeDirectory   <b>SHA-1</b>    hashSize=20  version=0x20400
+├─ idx[1] type=0x0002  Requirements     内部需求
+└─ idx[2] type=0x1000  CodeDirectory   <b>SHA-256</b>  hashSize=32  version=0x20400
+                       ↑ 两个 CD 都带 execSegBase/Limit/Flags</pre>
+</div>
+<p>两个 CD <b>覆盖同一段代码</b>、用两种算法各存一份页哈希；内核取「最高等级」的那个（SHA-256）做校验。我的旧产物只有 SHA-1 那一份，且版本号停在 0x20001 —— <b>这就是 AMFI 判它 invalid 的原因</b>。</p>
+
+<h2>四、这次改了什么</h2>
+<div class="card">
+  <p>只动<b>代码签名区域</b>，业务代码一个字节没改：</p>
+  <table>
+    <thead><tr><th>#</th><th>改动</th><th>对象</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>重建 SuperBlob = <b>SHA-1 CD + Requirements + SHA-256 CD</b>，两个 CD 均为 version 0x20400</td><td>BadgeBar.dylib（arm64 / arm64e）</td></tr>
+      <tr><td>2</td><td>同上</td><td>BadgeBarPrefs（arm64 / arm64e）</td></tr>
+      <tr><td>3</td><td>补上 <code>execSegBase=0 / execSegLimit=__TEXT.vmSize / execSegFlags=0</code></td><td>两个二进制的两个切片</td></tr>
+      <tr><td>4</td><td>原 <code>Requirements</code> 内部需求<b>原样保留</b>，两种算法各自算一遍它的哈希写进 slot -2</td><td>全部</td></tr>
+      <tr><td>5</td><td>按需扩展 <code>LC_CODE_SIGNATURE.datasize</code> 与 <code>__LINKEDIT filesize/vmsize</code>，并同步 fat 头里的切片 size 字段</td><td>全部（签名区变大，需向文件尾追加）</td></tr>
+      <tr><td>6</td><td>tar 内属主规范为 <code>root:wheel</code>（原包是 33:33 = <code>_www</code>）</td><td>全部 16 个成员</td></tr>
+      <tr><td>7</td><td>control 版本号 → <code>1.3.7-roothide5</code>，追加修复说明</td><td>control</td></tr>
+    </tbody>
+  </table>
+  <p class="muted">代码段/数据段/字符串/动态库链接<b>全部与 v4 逐字节一致</b>；签名区之前的差异字节只有 4–5 个，全部是上面第 5 条的尺寸字段（已逐个核对：<code>0x810/0x811</code>=datasize、<code>0xcdc/0xcdd</code>=LINKEDIT filesize 等）。</p>
+</div>
+
+<h2>五、验证结果</h2>
+<table>
+  <thead><tr><th>二进制 / 切片</th><th>SHA-1 主 CD</th><th>SHA-256 备用 CD</th><th>结论</th></tr></thead>
+  <tbody>
+    <tr><td>BadgeBar.dylib · arm64</td><td class="ok">18 / 18 页匹配</td><td class="ok">18 / 18 页匹配</td><td class="ok">PASS</td></tr>
+    <tr><td>BadgeBar.dylib · arm64e</td><td class="ok">18 / 18 页匹配</td><td class="ok">18 / 18 页匹配</td><td class="ok">PASS</td></tr>
+    <tr><td>BadgeBarPrefs · arm64</td><td class="ok">13 / 13 页匹配</td><td class="ok">13 / 13 页匹配</td><td class="ok">PASS</td></tr>
+    <tr><td>BadgeBarPrefs · arm64e</td><td class="ok">13 / 13 页匹配</td><td class="ok">13 / 13 页匹配</td><td class="ok">PASS</td></tr>
+  </tbody>
+</table>
+<p>另外复核通过的项目：</p>
+<ul>
+  <li>加载命令链完整：<code>ncmds=25 → 32+sizeofcmds=0xce0</code> 吻合；两个二进制都是</li>
+  <li>动态库链接全部为 <code>@loader_path/.jbroot/…</code>；设置面板对 libcolorpicker 仍是弱链接</li>
+  <li>fat 头 <code>size</code> 字段与实际切片长度一致，<code>align</code> 字段（14 = 16KB）保持原值</li>
+  <li><code>__LINKEDIT</code> 末端 <b>恰好等于</b>切片末尾、也恰好等于签名区末尾（与官方包同一约定）</li>
+  <li>零维护脚本（无 preinst/postinst/prerm/postrm），无系统路径写入，注入过滤器仍只有 <code>com.apple.springboard</code></li>
+  <li>依赖 <code>rootless-compat</code> 仍在；架构仍为 <code>iphoneos-arm64e</code></li>
+</ul>
+
+<h2>六、装之前 / 装之后</h2>
+<div class="card">
+  <h3>安装</h3>
+  <ol>
+    <li>Sileo 正常安装 <code>xyz.cypwn.badgebarx_1.3.7-roothide5_iphoneos-arm64e.deb</code></li>
+    <li>确认已装：<b>ElleKit</b>、<b>PreferenceLoader</b>、<b>Cephei</b>（ws.hbang.common）、<b>libcolorpicker</b>（ws.hbang.alderis）、<b>rootless-compat</b>；源 <code>https://roothide.github.io/</code></li>
+    <li>装完注销一次（Respring）</li>
+  </ol>
+  <h3>判断是否修好</h3>
+  <ul>
+    <li>设置 → BadgeBar X：<b>能正常打开</b>（不再弹 code signature invalid）</li>
+    <li>回到桌面：图标底部出现<b>彩色条状角标</b>，取代原来的红色圆点数字</li>
+    <li>若角标位置偏，先用插件自带 <code>xOffsetBadge</code> / <code>yOffsetBadge</code> / <code>badgeWidth</code> / <code>badgeHeight</code> 微调</li>
+  </ul>
+  <h3>万一还是不行（三种情形分别对应）</h3>
+  <table>
+    <thead><tr><th>现象</th><th>含义</th><th>处理</th></tr></thead>
+    <tbody>
+      <tr><td>仍是 <code>code signature invalid</code></td><td>装上的不是 v5（旧版残留）</td><td>Sileo 里先卸载，再装 v5</td></tr>
+      <tr><td>变成 <code>Library not loaded: …</code></td><td>签名已过，现在缺具体依赖库</td><td>报错会<b>直接点名</b>缺哪个库，照装即可</td></tr>
+      <tr><td>设置面板能开，桌面没变化</td><td>插件未注入 SpringBoard</td><td>Relaxin 高级选项里确认「插件注入」开启，再注销</td></tr>
+    </tbody>
+  </table>
+  <h3>脱困（任何情况下都可恢复）</h3>
+  <p>音量+ → 音量− → 长按电源键强制重启（以未越狱状态开机，一切正常）→ Relaxin 里关掉「插件注入」→ Sileo 卸载 → 重新越狱并打开注入。</p>
+</div>
+
+<h2>七、老实说：这轮我修正了前两轮的判断</h2>
+<div class="card">
+  <ul>
+    <li><b>上一轮我把原因归为「缺依赖库」</b>，依据是「设置面板与插件本体的报错同源」。方向对（确实同源），但归因错了——同源的是<b>签名</b>，不是依赖。</li>
+    <li><b>我此前的签名校验器是「自洽但不够」</b>：它只按包内已有的 SHA-1 CD 去算页哈希，算出 18/18、13/13 就报「签名有效」。它<b>无法发现「这套格式 iOS 17 根本不接受」</b>。这轮我重写了一个独立校验器，并引入<b>官方包作为基准</b>，才暴露出格式问题。</li>
+    <li>顺带纠正一个更早的误判：原包的 SHA-1 签名其实是<b>自洽</b>的（我早期报「15/18 失效」是校验器算法写错）。真正的问题从来不是「哈希算错了」，而是「格式太老」。</li>
+  </ul>
+</div>
+
+<h2>八、仍未真机验证</h2>
+<div class="card">
+  <p class="warn">以上全部是离线静态校验：签名结构、双 CD 页哈希、fat 头、段布局、control 都能从包里被证明。<b>但「装上后内核接受这个签名」属于运行时行为，必须上设备实测。</b></p>
+  <p>判断依据很明确：<b>设置面板能否打开</b>是最灵敏的指标——它一旦能开，说明签名与依赖两关都过了，插件本体也必然加载成功。</p>
+  <p class="muted">附带说明：arm64e 的 <code>cpusubtype</code> 是 <code>0x2</code> 还是 <code>0x80000002</code> 都不是判据——官方包两种写法都有（iconTime 是 0x2，Donut 是 0x80000002），都能正常工作。</p>
+</div>
+
+<h2>九、这一版修复现在可以「一键复现」</h2>
+<div class="card">
+  <p>为避免以后再出现「手工修出来的包没法再生成一遍」，我把这轮的全部结论固化进了
+  <code>C:\Users\张培斌\.workbuddy\skills\ios-deb-roothide-port\</code> 这套技能里，
+  现在从<b>原始有根包</b>一条命令就能复现出与 <code>roothide5</code> 等价的产物：</p>
+  <pre><code>python scripts/roothide_convert.py "BadgeBar X-1.3.7.deb" OUT.deb \
+    --version 1.3.7-roothide5 --extra-deps rootless-compat \
+    --weak-link 'BadgeBarPrefs=@loader_path/.jbroot/usr/lib/libcolorpicker.dylib'
+python scripts/audit.py OUT.deb "BadgeBar X-1.3.7.deb"</code></pre>
+  <h3>技能里新增/修正了什么</h3>
+  <table>
+    <thead><tr><th>项</th><th>说明</th></tr></thead>
+    <tbody>
+      <tr><td><code>dualcd_sign.py</code></td><td>新增可复用模块：把任意 Mach-O（fat/thin）重签成现代双
+        CodeDirectory（SHA-1 + SHA-256，version <code>0x20400</code>，带 <code>execSeg</code>），
+        并按原 fat <code>align</code> 重排偏移。转换脚本默认调用它。</td></tr>
+      <tr><td>XinaA15 预设</td><td>把此前手工写的路径表固化：<code>/var/LIY/Frameworks/X → /Library/Frameworks/X</code>、
+        <code>/var/LIY/PreferenceBundles/X → /Library/PreferenceBundles/X</code>、
+        <code>/var/bin/X → /usr/bin/X</code>、<code>/var/lib/libcolorpicker.dylib → /usr/lib/libcolorpicker.dylib</code>。
+        检测到 <code>/var/LIY</code> 或 <code>/var/lib</code> 自动启用。</td></tr>
+      <tr><td>弱链接加固</td><td>新增 <code>--weak-link '文件=库路径'</code>，
+        即 v4 那次「把设置面板对 libcolorpicker 的硬依赖降级为弱链接」的动作，现在可参数化复现。</td></tr>
+      <tr><td>审计器 <code>[3b]</code></td><td>新增硬性检查：签名里<b>必须</b>有 SHA-256 的 CodeDirectory 且
+        version ≥ <code>0x20400</code>；同时 <code>[2]</code> 的路径检查扩展到 weak/lazy/upward/reexport 命令。</td></tr>
+      <tr><td>修掉 3 个真实 bug</td><td>
+        ① <code>log()</code> 不接受多参数，遇到未映射路径直接崩；
+        ② 字符串改写会误命中<b>加载命令区</b>的同名串（因为 <code>find</code> 从文件头开始），
+        现在只在 <code>__cstring</code> 范围内查；
+        ③ 旧签名重算逻辑会随签名变长而错位，已被双 CD 重签取代。</td></tr>
+    </tbody>
+  </table>
+  <h3>独立复核结果</h3>
+  <ul>
+    <li>用上述命令对<b>原始有根包</b>重跑一遍，产出与 <code>roothide5</code> 对比：
+      <code>BadgeBar.dylib</code> <b>逐字节一致</b>（169,968 B）。</li>
+    <li><code>BadgeBarPrefs</code>：切片长度、加载命令、符号链接、所有路径改写、双 CD 签名<b>全部一致</b>；
+      仅 3 条重写后的字符串在零填充空隙里的<b>物理摆放顺序</b>不同（旧脚本按手写顺序，新脚本按源地址顺序，
+      更可复现），<b>功能完全等价</b>。</li>
+    <li>审计：<code>FAIL 0</code>（<code>[1]/[2]/[3]/[3b]/[4]/[5]/[6]</code> 全过），
+      仅剩 2 条预期内的 WARN —— 弱链接提示（那是我们主动做的加固，需要人工确认该库符号未被调用）。</li>
+  </ul>
+  <p class="muted">复核产物：<code>E:\deb\convtest_out.deb</code>（可自行删除）。</p>
+</div>
+
+<footer>
+  分析产物：<code>E:\deb\_fix2\</code>（签名取证脚本 <code>cdump.py</code> / <code>rawdump.py</code>、重签脚本 <code>makedeb5.py</code>、全部原始输出）<br>
+  对比基准：roothide 官方源 12 个隐根原生包 + 你提供的 Donut(RootHide)-2.0.3.deb
+</footer>
+
+</div>
+</body>
+</html>
