@@ -1,0 +1,81 @@
+[arm64] === padding: key=0x7c00 func=0x7c00 glue=0x7e00 sel=0x7e80
+  标识符: CFString @0x8148 内容 com.dao.donut -> com.dao.donutbar（ptr 0x7308 -> 0x7eb0 池，len 13 -> 16）
+  原语: alloc=0x65b4 init=0x68a0 ofk=0x6a00 ival=0x68c0 rel=0x6620
+  selref -> cornerRadius @0x7e80（选择子串 40 B）
+  恢复 3 处 ldrb 读 0xc3d0 + NOP ctor strb @0x4150（样式驱动实心标志）
+  取色桩已移除：0x4ebc 恢复 `cbz x8 -> 0x4ed4`（64 位判据）；0x7d40..0x7d80 归零
+  prefs_to_rect @0x7c00 (320B = 80 条)
+  padding 布局: FUNC 0x7c00+320B->0x7d40 | 余 192B | GLUE 0x7e00+76B->0x7e4c | 余 52B | SEL_STR 0x7e80+40B->0x7ea8
+  glue @0x7e00 (76B = 19 条) 热路径无除法/无常量池/**无任何 objc_msgSend**；prefs_to_rect 320B = 80 条（加载期无 fdiv）
+  bl→glue @0x5b64 -> 0x7e00
+  __bss 扩至 0x118
+[arm64e] === padding: key=0x7c00 func=0x7c00 glue=0x7e00 sel=0x7e80
+  标识符: CFString @0x8148 内容 com.dao.donut -> com.dao.donutbar（ptr 0x7570 -> 0x7eb0 池，len 13 -> 16）
+  原语: alloc=0x67d0 init=0x6b00 ofk=0x6c60 ival=0x6b20 rel=0x6860
+  selref -> cornerRadius @0x7e80（选择子串 40 B）
+  恢复 3 处 ldrb 读 0xc3d0 + NOP ctor strb @0x41c0（样式驱动实心标志）
+  取色桩已移除：0x5044 恢复 `cbz x8 -> 0x505c`（64 位判据）；0x7d40..0x7d80 归零
+  prefs_to_rect @0x7c00 (320B = 80 条)
+  padding 布局: FUNC 0x7c00+320B->0x7d40 | 余 192B | GLUE 0x7e00+76B->0x7e4c | 余 52B | SEL_STR 0x7e80+40B->0x7ea8
+  glue @0x7e00 (76B = 19 条) 热路径无除法/无常量池/**无任何 objc_msgSend**；prefs_to_rect 320B = 80 条（加载期无 fdiv）
+  bl→glue @0x5cec -> 0x7e00
+  __bss 扩至 0x118
+=== 设置面板：删「圆点」+ 更新文案 + 4 滑块 ===
+  删掉独立分组 "Custom Color" x1
+  Root.plist 旧域单元格改写 2 处（其余单元格）
+  Root.plist 项数 18
+  zh-Hans 本地化（删 Dot + 文案 + 滑块标题 + 恢复默认 + 样式）
+  en 本地化（删 Dot + 文案 + 滑块标题 + 恢复默认 + 样式）
+
+=== DonutPrefs：恢复默认按钮 + 颜色选项显示修复 ===
+  [0x4000] alloc stub=0x5bcc classref disp=0x988 init=0x60c0 set=0x6520 reload=0x62c0
+  [0x4000] 标识符: suite CFString @0x8098 内容 com.dao.donut -> com.dao.donutbar（ptr 0x754d -> 0x7ee0 池，len 13 -> 16）
+  [0x4000] suite=0x8098 键=['0x80d8', '0x8138', '0x8398', '0x83d8'] 载体={'40': '0x80b8', '80': '0x8218', '30': '0x8318', '6': '0x8238', '1.2.0': '0x82f8'}
+  [0x4000] 恢复默认 IMP @0x7a40 (168B)；原方法体 @0x459c 保持不动
+  [0x4000] 标题 -> 'Donut-bar' @0x7ae8 (len 9)
+  [0x4000] entry[6] 'donutReloadSpecifiers': imp 0x459c -> 0x7a40（点按钮即恢复默认）
+  [0x4000] 通知回调 @0x57b0: b 0x5fe0(桩) -> b 0x459c(原文体)
+  [0x4000] specifiers @0x446c: b.eq #0x450c 保持（mode==Custom 才显示颜色项）
+  [0x4000] 滑块折叠桩 @0x7d00(92B)：0x4510 -> b 桩（样式!=0 时倒序移除 index 4..11）
+  [0x4000] 底部品牌：版权 CFString 0x8338 → 致谢(utf16@0x7c00)；value 参数改指同串；按钮 addSubview @0x5524 NOP
+  [0x18000] alloc stub=0x5d58 classref disp=0x8e0 init=0x6160 set=0x65c0 reload=0x6360
+  [0x18000] 标识符: suite CFString @0x8138 内容 com.dao.donut -> com.dao.donutbar（ptr 0x75ed -> 0x7ee0 池，len 13 -> 16）
+  [0x18000] suite=0x8138 键=['0x8178', '0x81d8', '0x8438', '0x8478'] 载体={'40': '0x8158', '80': '0x82b8', '30': '0x83b8', '6': '0x82d8', '1.2.0': '0x8398'}
+  [0x18000] 恢复默认 IMP @0x7ae0 (172B)；原方法体 @0x4610 保持不动
+  [0x18000] 标题 -> 'Donut-bar' @0x7b8c (len 9)
+  [0x18000] entry[6] 'donutReloadSpecifiers': imp 0x4610 -> 0x7ae0（点按钮即恢复默认）
+  [0x18000] 通知回调 @0x58e0: b 0x6080(桩) -> b 0x4610(原文体)
+  [0x18000] specifiers @0x44d0: b.eq #0x4570 保持（mode==Custom 才显示颜色项）
+  [0x18000] 滑块折叠桩 @0x7d00(92B)：0x4574 -> b 桩（样式!=0 时倒序移除 index 4..11）
+  [0x18000] 底部品牌：版权 CFString 0x83d8 → 致谢(utf16@0x7c00)；value 参数改指同串；按钮 addSubview @0x5628 NOP
+       [arm64] ident='DonutPrefs.47ba6b93.unsigned' slots=18 datasize 0x5c0->0x5b0 slice 0x11980->0x11970
+       [arm64e] ident='DonutPrefs.47ba6b93.unsigned' slots=18 datasize 0x5c0->0x5b0 slice 0x118a0->0x11890
+  DonutPrefs 重签名完成
+  __init_offsets[arm64] -> 0x7c00
+  __init_offsets[arm64e] -> 0x7c00
+
+=== 重新签名 ===
+       [arm64] ident='Donut.dylib.47ba6b93.unsigned' slots=18 datasize 0x5c0->0x5c0 slice 0x115d0->0x115d0
+       [arm64e] ident='Donut.dylib.47ba6b93.unsigned' slots=18 datasize 0x5c0->0x5c0 slice 0x115d0->0x115d0
+  入口 label -> Donut-bar
+  图标 icon.png     29x29  1434 B（无损 RGBA + zopfli，LANCZOS 缩小）
+  图标 icon@2x.png  58x58  3379 B（无损 RGBA + zopfli，LANCZOS 缩小）
+  图标 icon@3x.png  87x87  5254 B（无损 RGBA + zopfli，LANCZOS 缩小）
+  图标合计 10067 B（源图 1024x1024 天气扁平图标，无损 RGBA + zopfli）
+  副标题 -> 横条 / 空心圆 / 圆点
+  control 重写：
+    Package: com.dao.donutbar
+    Name: Donut-bar(RootHide)
+    Description: 桌面图标通知角标变为图标下方的彩色横条，自适应颜色；基于刀刀源的 Donut、BadgeBar 显示效果，并向所有贡献者致谢。
+    Maintainer: 文武
+    Author: 文武
+    Section: 嗨-工具
+    Depends: mobilesubstrate (>= 0.9.5000), preferenceloader, firmware (>= 15.0)
+    Conflicts: com.noisyflake.cozybadges, com.yourepo.b4db1r3r3p0.ocd, com.b4db1r3.ocd, com.dao.ocd, com.dao.ocd5lite, com.dao.ocd5, com.sini921.donut, com.dao.donut
+    Architecture: iphoneos-arm64e
+    Version: 1.2.0
+
+
+=== 输出 ===
+  E:\deb\donut-bar120.deb  36748 B  sha256=43a749e25109a0785eda1c90f68b51e9756d76cf2732121a14b92f12302df57c
+  Version: 1.2.0 / Name: Donut-bar
