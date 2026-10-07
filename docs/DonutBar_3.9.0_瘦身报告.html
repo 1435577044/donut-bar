@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>Donut-bar 3.9.0 瘦身报告</title>
+<style>
+  :root{--bg:#f6f7f9;--panel:#fff;--ink:#1b1f24;--ink2:#4d5560;--line:#e3e6ea;
+        --accent:#1f6feb;--ok:#1a7f37;--warn:#9a6700;--bad:#b42318;--mono:#f2f4f7;--hi:#fff8e6}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+       font:15px/1.72 -apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif}
+  .wrap{max-width:1020px;margin:0 auto;padding:32px 22px 60px}
+  h1{font-size:24px;margin:0 0 6px}
+  .sub{color:var(--ink2);font-size:13px;margin-bottom:22px}
+  h2{font-size:18px;margin:34px 0 10px;padding-bottom:6px;border-bottom:2px solid var(--line)}
+  h3{font-size:15px;margin:20px 0 8px;color:var(--ink2)}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px 18px;margin:12px 0}
+  .lead{background:#eef4ff;border-left:4px solid var(--accent)}
+  .warnbox{background:var(--hi);border-left:4px solid #d4a017}
+  table{width:100%;border-collapse:collapse;margin:10px 0;font-size:13.5px}
+  th,td{border:1px solid var(--line);padding:7px 9px;text-align:left;vertical-align:top}
+  th{background:#eff2f6;font-weight:600}
+  td.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+  code{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:12.5px;
+       background:var(--mono);padding:1px 5px;border-radius:4px}
+  pre{background:var(--mono);border:1px solid var(--line);border-radius:8px;padding:12px 14px;
+      overflow:auto;font-size:12.5px;line-height:1.55}
+  .ok{color:var(--ok);font-weight:600}.bad{color:var(--bad);font-weight:600}.warn{color:var(--warn);font-weight:600}
+  ul,ol{margin:8px 0 8px 20px;padding:0}li{margin:4px 0}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media(max-width:780px){.grid2{grid-template-columns:1fr}}
+  .kpi{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+  .kpi b{display:block;font-size:21px;line-height:1.2;margin-bottom:2px}
+  .kpi span{font-size:12.5px;color:var(--ink2)}
+  .tag{display:inline-block;font-size:11.5px;padding:1px 7px;border-radius:20px;border:1px solid var(--line);
+       background:#f8fafc;color:var(--ink2);margin-right:6px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Donut-bar 3.9.0：瘦身报告</h1>
+<div class="sub">
+  产出包 <code>donut-bar390.deb</code>（31 448 B，sha256 <code>55b15d29…0e0396f</code>）　·　
+  上一版 3.8.0 及更早版本保留可回退　·　目标环境 iPhone 15 Pro Max / A17 Pro / iOS 17.2.1 / Relaxin（RootHide 隐根）
+</div>
+
+<div class="card lead">
+  <b>结论：deb 从 40 074 B 降到 31 448 B（−21.5%），安装后占用从 364 800 B 降到 349 049 B（−15.8 KB）。</b><br>
+  省下来的几乎全部来自<b>图标</b>——它原本占 deb 的 56%（22 KB，PNG 已压缩 ⇒ 再压 tar 也压不动）。
+  本次把它降到 6 KB，同时**保留圆角与阴影的半透明**。
+</div>
+
+<div class="grid2">
+  <div class="kpi"><b>40 074 → 31 448 B</b><span>deb 体积（−21.5%）</span></div>
+  <div class="kpi"><b>21 764 → 6 013 B</b><span>三张图标合计（−72%）</span></div>
+  <div class="kpi"><b>364 800 → 349 049 B</b><span>安装后占用（−15.8 KB）</span></div>
+  <div class="kpi"><b>0 字节</b><span>dylib 的改动（与上一版逐字节相同）</span></div>
+</div>
+
+<h2>一、占用到底花在哪（优化前）</h2>
+<table>
+<tr><th>成员</th><th class="n">未压缩</th><th class="n">对 deb 的贡献（近似）</th><th>说明</th></tr>
+<tr><td>三张 icon*.png</td><td class="n">21 764 B</td><td class="n bad">≈22 KB（第二大头）</td><td>PNG 本身已 deflate ⇒ tar 再压基本压不动</td></tr>
+<tr><td>Donut.dylib</td><td class="n">169 424 B</td><td class="n">≈12.8 KB</td><td>两切片高度相似 + 大量零填充 ⇒ lzma 压到 7.5%</td></tr>
+<tr><td>DonutPrefs</td><td class="n">170 128 B</td><td class="n">≈12.9 KB</td><td>同上</td></tr>
+<tr><td>其余（plist / strings）</td><td class="n">3 484 B</td><td class="n">≈1.5 KB</td><td>已很小</td></tr>
+</table>
+<p>所以「缩小占用」真正可动的是图标（另两个 Mach-O 压缩后都只剩 13 KB，且删改风险远大于收益）。</p>
+
+<h2>二、这次做了什么</h2>
+<h3>1) 图标：修正尺寸 + 调色板化（保留半透明）</h3>
+<ul>
+  <li><b>修掉一个 bug</b>：<code>icon.png</code>（1x）之前被写成 87px，应为 <b>29px</b>（与 Math 原版一致）—— 只这一项就省 ~7.5 KB。</li>
+  <li><b>调色板化</b>：把 RGBA 量化成「96 色 × 8 档 alpha」的调色板 PNG，用 PNG 的 <code>tRNS</code> 逐索引存 alpha。
+      这样既大幅缩小，<b>又保留圆角/阴影的半透明</b>（不是粗暴地把 alpha 二值化）。
+      实际核验：icon.png 仍有 809 个半透明像素，@2x 3211 个，@3x 7241 个 ⇒ 抗锯齿完好。</li>
+  <li><b>三张共用同一调色板</b>（以 87px 那张为准）⇒ 三份 PNG 数据更相似，tar 整体压缩时 lzma 的跨文件去重更有效（再省 ~1 KB）。</li>
+</ul>
+<pre>icon.png      29x29  1201 B     （原 8574 B）
+icon@2x.png   58x58  1864 B     （原 4616 B）
+icon@3x.png   87x87  2948 B     （原 8574 B）
+---------------------------------------------
+合计          6013 B （原 21764 B，−72%）</pre>
+
+<h3>2) data.tar 压缩改用 lzma 极限档（preset 9e）</h3>
+<p>格式不变（仍是 <code>data.tar.lzma</code>，安装器无需改动），约再省 100 B。</p>
+
+<h3>3) 刻意没动的地方（有理由）</h3>
+<ul>
+  <li><b>两个 Mach-O 的代码</b>：它们压缩后各只有约 12.8 KB；170 KB 的原始体积里大部分是"段对齐的零填充" ⇒ 不删反而没影响。真要再省只能删代码 / 删符号表 / 砍 arm64 切片，收益只有约 1 KB 且会破坏 A11/A10 设备（iPhone 8/X）兼容性，风险远大于收益。</li>
+  <li><b>注入代码本身</b>：glue 仍是 19 条指令（76 B），热路径零调用、无分配、无定时器 ⇒ 运行期开销可忽略。</li>
+</ul>
+
+<h2>三、校验结果（四关全过）</h2>
+<table>
+<tr><th>关卡</th><th>内容</th><th>结果</th></tr>
+<tr><td>结构 + 落点 + 文案 + 回归</td><td><code>verify_v390.py</code>：glue 19 句逐句一致（76B）、无 <code>bl</code>/无栈操作/不读 badgeW/无 fdiv；注入点前 4 条 <code>fmov</code> 断言；prefs 80 句、常量 76/5；组尾说明三处核对；样式三档 Bar/Ring/Dot；标识符一致性</td><td class="ok">PASS</td></tr>
+<tr><td><b>图标专项</b></td><td>三张分别是 29/58/87 像素、PNG 魔数正确、<b>半透明像素仍在（809 / 3211 / 7241）</b>、合计 6 013 B &lt; 8 KB</td><td class="ok">PASS</td></tr>
+<tr><td>交付三复核</td><td>同参数重跑 sha256 一致；两个 Mach-O 重签幂等；<b>差异「恰为三张图标 + DonutPrefs 的版本字节」</b>；<b>Donut.dylib 与上一版逐字节相同</b>（本次只动图标 + 版本号）</td><td class="ok">PASS</td></tr>
+<tr><td>结构审计 / 重定位</td><td><code>audit.py</code> FAIL 0；<code>verify_reloc.py</code> FAIL 0</td><td class="ok">FAIL 0</td></tr>
+</table>
+<p class="sub" style="margin-top:4px">一键重跑：<code>python E:\deb\_fix2\run_all_gates390c.py --rerun</code></p>
+
+<h2>四、体积对照</h2>
+<table>
+<tr><th>版本</th><th class="n">deb</th><th class="n">安装后</th><th class="n">图标</th></tr>
+<tr><td>原版 Donut 2.0.3</td><td class="n">45 070 B</td><td class="n">361 314 B</td><td class="n">19 168 B</td></tr>
+<tr><td>我们 3.8.0</td><td class="n">40 074 B</td><td class="n">364 800 B</td><td class="n">21 764 B</td></tr>
+<tr><td><b>我们 3.9.0</b></td><td class="n ok"><b>31 448 B</b></td><td class="n ok"><b>349 049 B</b></td><td class="n ok"><b>6 013 B</b></td></tr>
+</table>
+<p class="sub">相对原版 Donut：deb −30.2%；安装后 −12.3 KB。</p>
+
+<h2>五、文件与回退</h2>
+<table>
+<tr><th>文件</th><th>说明</th></tr>
+<tr><td><code>E:\deb\donut-bar390.deb</code></td><td>本轮交付包，Version 3.9.0</td></tr>
+<tr><td><code>E:\deb\_fix2\patch_donut16.py</code></td><td>构建脚本（唯一入口）：图标调色板化 + 共用调色板 + 1x 尺寸修正 + lzma 9e</td></tr>
+<tr><td><code>_fix2\verify_v390.py</code>　<code>verify_delivery390c.py</code>　<code>run_all_gates390c.py</code></td><td>本轮验证脚本（可重跑）</td></tr>
+<tr><td><code>E:\deb\donut-bar380.deb</code>（及更早版本）</td><td><b>回退用</b></td></tr>
+</table>
+
+<hr style="border:none;border-top:1px solid var(--line);margin:28px 0 10px">
+<div class="sub">
+  <span class="tag">v3.9.0</span><span class="tag">roothide / arm64e</span>
+  <span class="tag">Package: com.dao.donutbar</span><br>
+  报告生成时间：2026-09-25
+</div>
+
+</div>
+</body>
+</html>
