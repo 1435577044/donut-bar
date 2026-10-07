@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Donut-bar 4.0.6 体积精简报告</title>
+<style>
+  :root{
+    --bg:#f7f8fa; --card:#fff; --line:#e3e6ea; --line2:#eef0f3;
+    --tx:#1c1f23; --tx2:#5b636d; --tx3:#8a929c;
+    --ok:#1a7f4b; --okbg:#eaf7f0; --warn:#9a6a00; --warnbg:#fdf5e3;
+    --bad:#b3261e; --badbg:#fdecea; --accent:#1f5fbf; --accentbg:#eef3fb;
+    --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Cascadia Mono",monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--tx);
+    font:15px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei",sans-serif}
+  .wrap{max-width:1060px;margin:0 auto;padding:40px 24px 72px}
+  header{border-bottom:1px solid var(--line);padding-bottom:22px;margin-bottom:26px}
+  h1{margin:0 0 10px;font-size:25px;letter-spacing:.2px}
+  .sub{color:var(--tx2);font-size:13.5px;display:flex;flex-wrap:wrap;gap:6px 18px}
+  .sub b{font-weight:600;color:var(--tx)}
+  h2{font-size:18px;margin:38px 0 14px;padding-left:11px;border-left:3px solid var(--accent)}
+  h3{font-size:15px;margin:24px 0 10px;color:var(--tx)}
+  p{margin:10px 0}
+  table{width:100%;border-collapse:collapse;margin:14px 0;font-size:14px;background:var(--card);
+    border:1px solid var(--line);border-radius:8px;overflow:hidden}
+  th,td{padding:9px 13px;text-align:left;border-bottom:1px solid var(--line2);vertical-align:top}
+  th{background:#f2f4f7;font-weight:600;font-size:13px;color:var(--tx2);white-space:nowrap}
+  tr:last-child td{border-bottom:none}
+  td.num,th.num{text-align:right;font-family:var(--mono);font-size:13px;white-space:nowrap}
+  code{font-family:var(--mono);font-size:12.5px;background:#f0f2f5;padding:1.5px 5px;border-radius:4px;
+    word-break:break-all}
+  pre{font-family:var(--mono);font-size:12.5px;background:#f8f9fb;border:1px solid var(--line);
+    border-radius:8px;padding:14px 16px;overflow-x:auto;line-height:1.6;margin:12px 0}
+  .tag{display:inline-block;font-size:11.5px;font-weight:600;padding:2px 8px;border-radius:20px;
+    white-space:nowrap;line-height:1.7}
+  .t-ok{color:var(--ok);background:var(--okbg)}
+  .t-warn{color:var(--warn);background:var(--warnbg)}
+  .t-bad{color:var(--bad);background:var(--badbg)}
+  .t-info{color:var(--accent);background:var(--accentbg)}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(196px,1fr));gap:12px;margin:16px 0}
+  .kpi{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:15px 17px}
+  .kpi .k{font-size:12.5px;color:var(--tx3);margin-bottom:5px}
+  .kpi .v{font-size:21px;font-weight:600;font-family:var(--mono);letter-spacing:-.3px}
+  .kpi .n{font-size:12px;color:var(--tx2);margin-top:3px}
+  ul,ol{margin:10px 0;padding-left:22px}
+  li{margin:5px 0}
+  .note{background:var(--accentbg);border:1px solid #d5e2f7;border-radius:8px;padding:13px 16px;
+    font-size:13.5px;margin:14px 0}
+  .verdict{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--ok);
+    border-radius:8px;padding:16px 20px;margin:16px 0}
+  .warnbox{background:var(--warnbg);border:1px solid #f0e0b8;border-radius:8px;padding:13px 16px;
+    font-size:13.5px;margin:14px 0}
+  .bar{height:9px;border-radius:5px;background:#e9ecf0;overflow:hidden;display:flex;min-width:90px}
+  .bar i{display:block;height:100%}
+  footer{margin-top:44px;padding-top:18px;border-top:1px solid var(--line);color:var(--tx3);font-size:12.5px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>Donut-bar 4.0.6 — 体积精简报告</h1>
+  <div class="sub">
+    <span>包标识 <b>com.dao.donutbar</b></span>
+    <span>架构 <b>iphoneos-arm64e（保留双切片）</b></span>
+    <span>基准 <b>4.0.5</b></span>
+    <span>产物 <b>donut-bar406.deb</b></span>
+  </div>
+</header>
+
+<div class="verdict">
+  <b>结论</b>：<b>31520 B → 29568 B，减小 1952 B（−6.2%）</b>。
+  功能<b>零改动</b>（已用最小差异验证证明：除 3 个图标与版本号外，其余文件含注入 SpringBoard 的
+  <code>Donut.dylib</code> 逐字节相同）。<br>
+  <b>6.2% 是这个约束下的真实上限</b>——原因是包内 84% 的体积是两个 Mach-O 的「arm64 + arm64e 双切片」，
+  该部分不可压缩。你的选择是保留双架构，因此这部分不能动。若日后愿意只留 arm64e，
+  可再降到 <b>22386 B（−29.0%）</b>，随时可出。
+</div>
+
+<div class="grid">
+  <div class="kpi"><div class="k">4.0.5 起</div><div class="v">31520 B</div><div class="n">双切片 + 旧图标算法</div></div>
+  <div class="kpi"><div class="k">4.0.6 交付</div><div class="v">29568 B</div><div class="n">−1952 B（−6.2%）</div></div>
+  <div class="kpi"><div class="k">图标合计</div><div class="v">6013 → 3049 B</div><div class="n">省 2964 B（−49.3%）</div></div>
+  <div class="kpi"><div class="k">可选：仅 arm64e</div><div class="v">22386 B</div><div class="n">−29.0%（需你确认）</div></div>
+</div>
+
+<h2>1. 先量再动：体积到底花在哪</h2>
+<p><code>data.tar</code> 是压缩的，所以<strong>文件原始大小会骗人</strong>。下表是按
+「单独压缩后的折算体积」排的真实优先级：</p>
+
+<table>
+  <tr>
+    <th>项</th><th class="num">原始</th><th class="num">折算</th><th>占压缩体</th><th>可否优化</th>
+  </tr>
+  <tr>
+    <td><code>DonutPrefs</code>（fat 双切片）</td><td class="num">170128</td><td class="num">13044</td>
+    <td><div class="bar"><i style="width:42.4%;background:#c0392b"></i></div>42.4%</td>
+    <td><span class="tag t-warn">只能去切片</span></td>
+  </tr>
+  <tr>
+    <td><code>Donut.dylib</code>（fat 双切片）</td><td class="num">169424</td><td class="num">12824</td>
+    <td><div class="bar"><i style="width:41.7%;background:#c0392b"></i></div>41.7%</td>
+    <td><span class="tag t-warn">只能去切片</span></td>
+  </tr>
+  <tr>
+    <td>图标 ×3（@3x / @2x / 1x）</td><td class="num">6013</td><td class="num">5472</td>
+    <td><div class="bar"><i style="width:17.8%;background:#1a7f4b"></i></div>17.8%</td>
+    <td><span class="tag t-ok">本次已压</span></td>
+  </tr>
+  <tr>
+    <td><code>Root.plist</code></td><td class="num">1296</td><td class="num">992</td>
+    <td><div class="bar"><i style="width:3.2%;background:#8a929c"></i></div>3.2%</td>
+    <td><span class="tag t-bad">不可动</span></td>
+  </tr>
+  <tr>
+    <td><code>zh-Hans/Root.strings</code></td><td class="num">1100</td><td class="num">876</td>
+    <td><div class="bar"><i style="width:2.8%;background:#8a929c"></i></div>2.8%</td>
+    <td><span class="tag t-bad">不可动</span></td>
+  </tr>
+  <tr>
+    <td><code>en.lproj/Root.strings</code></td><td class="num">776</td><td class="num">560</td>
+    <td><div class="bar"><i style="width:1.8%;background:#8a929c"></i></div>1.8%</td>
+    <td><span class="tag t-warn">删了只省 28 B</span></td>
+  </tr>
+  <tr>
+    <td>2 个 Plist</td><td class="num">278</td><td class="num">348</td>
+    <td><div class="bar"><i style="width:1.1%;background:#8a929c"></i></div>1.1%</td>
+    <td><span class="tag t-bad">太小</span></td>
+  </tr>
+  <tr>
+    <td>ar 头 + <code>control.tar.gz</code></td><td class="num">—</td><td class="num">758</td>
+    <td><div class="bar"><i style="width:2.4%;background:#8a929c"></i></div>2.4%</td>
+    <td><span class="tag t-bad">固定</span></td>
+  </tr>
+</table>
+
+<h3>再把 Mach-O 拆到段级（看为什么不能压）</h3>
+<p>以 <code>Donut.dylib</code> 的 arm64 切片（71120 B）为例：</p>
+
+<table>
+  <tr><th>段</th><th class="num">filesize</th><th class="num">非零字节</th><th class="num">折算 lzma</th><th>性质</th></tr>
+  <tr><td><code>__TEXT</code></td><td class="num">32768</td><td class="num">13681</td><td class="num">7324</td>
+      <td>真实机器码 —— 占切片压缩体 <b>78%</b>，不可压</td></tr>
+  <tr><td><code>__DATA_CONST</code></td><td class="num">16384</td><td class="num">329</td><td class="num">288</td>
+      <td>几乎全是零，压缩后近似免费</td></tr>
+  <tr><td><code>__DATA</code></td><td class="num">16384</td><td class="num">283</td><td class="num">328</td>
+      <td>同上</td></tr>
+  <tr><td><code>__LINKEDIT</code></td><td class="num">5584</td><td class="num">4048</td><td class="num">1880</td>
+      <td>符号表 + 双 CodeDirectory 签名，<b>iOS 16+/17 AMFI 硬要求</b></td></tr>
+</table>
+
+<div class="note">
+  <b>两个重要推论</b>：<br>
+  ① 切片之间还有 <b>10800 B 全零对齐填充</b> —— 它压缩后近似免费，<b>不是优化点</b>，别去动对齐；<br>
+  ② <b>精简插桩代码对包体积零影响</b>。插桩写在原本全零的 padding 区，压缩后成本≈0。
+  把 320 B 的 <code>prefs_to_rect</code> 缩到 200 B，包不会小一个字节。
+  <b>「代码精简」≠「体积缩小」</b>——这次一开始就按这条排除了整条错误方向。
+</div>
+
+<h2>2. 本次做了什么：图标 RGBA 四维量化 + zopfli</h2>
+
+<h3>为什么原来的做法不够好</h3>
+<p>原算法是「N 色 <b>×</b> M 档 alpha」分开量化，最多产生 <code>ncol × nal</code> 个调色板项，
+而且 alpha 被独立砍档 ⇒ 半透明边缘直接崩坏。实测同一张 87px 渐变图标：</p>
+
+<table>
+  <tr><th>策略</th><th class="num">体积</th><th class="num">max 像素误差</th><th>评价</th></tr>
+  <tr><td>48 色 × 4 档 alpha（分开量化）</td><td class="num">3921 B</td><td class="num">255</td>
+      <td><span class="tag t-bad">边缘全废</span></td></tr>
+  <tr><td><b>RGBA 整体量化 64 项</b>（颜色与 alpha 一起）</td><td class="num"><b>3049 B</b></td>
+      <td class="num"><b>45</b></td><td><span class="tag t-ok">采用</span></td></tr>
+</table>
+
+<p>两步叠加：</p>
+<ol>
+  <li><b>RGBA 四维量化</b>：把颜色和 alpha 当成同一个 4 维空间一起量化成 64 项
+      （<code>Image.quantize(colors=64, method=FASTOCTREE)</code>）—— 同体积下误差小一个数量级；</li>
+  <li><b>zopfli 重压 IDAT</b>：换用匹配能力更强的 DEFLATE 实现重压压缩流。
+      <b>像素数据一字不改</b>，纯编码优化，再省约 5%。</li>
+</ol>
+
+<p>选档时按真实显示尺寸复核过：设置面板图标显示为 29pt（@3x = 87px），
+64 项与原图在 29pt 下肉眼无差；32 项才开始出现可见噪点。
+（已在 5 倍放大与真实尺寸两种视图下逐一比对。）</p>
+
+<div class="warnbox">
+  <b>一个必须先修的工具缺陷</b>：误差度量必须在<b>预乘 alpha</b> 空间做。
+  全透明像素的 RGB 是无意义的，直接 <code>ImageChops.difference</code> 会把它们算成 255 的误差 ——
+  于是得出结论「量化到 32 项误差也是 255」，完全误导。改用预乘后同一组数据是 23。
+  <b>度量错了，后面所有判断都是错的。</b>
+</div>
+
+<h2>3. 试过但确认无效的（附实测值，避免以后重复劳动）</h2>
+
+<table>
+  <tr><th>尝试</th><th class="num">实测结果</th><th>原因</th></tr>
+  <tr><td>删掉 <code>en.lproj/Root.strings</code></td><td class="num">−28 B</td>
+      <td>27 条里 25 条是「键 == 值」，lzma 早就把重复压掉了</td></tr>
+  <tr><td>把 <code>en.lproj</code> 精简成「真覆盖」条目再重新编码</td><td class="num">反而变大</td>
+      <td>用 plistlib 重写 binary plist 破坏了原有的压缩优势</td></tr>
+  <tr><td>tar 成员重排（让相似文件相邻以提高字典命中）</td><td class="num">+52 B</td>
+      <td>lzma 的 64 MB 窗口本来就覆盖得下，重排只打乱了原有顺序</td></tr>
+  <tr><td>lzma 参数网格（11 组 lc / lp / pb 组合）</td><td class="num">全部更差</td>
+      <td>默认 <code>lc=3 lp=0 pb=2</code> 已是最优</td></tr>
+  <tr><td>精简 dylib 侧插桩代码</td><td class="num">0 B</td>
+      <td>插桩占的是原本全零的 padding，压缩后近似免费</td></tr>
+</table>
+
+<h2>4. 如果想更小：唯一剩下的一条路</h2>
+<p>精确计算（已实测，非估算）：</p>
+<table>
+  <tr><th>方案</th><th class="num">体积</th><th class="num">相对 4.0.5</th><th>代价</th></tr>
+  <tr><td>4.0.5（双切片，旧图标）</td><td class="num">31520 B</td><td class="num">—</td><td>—</td></tr>
+  <tr><td><b>4.0.6 本次交付</b>（双切片 + 图标优化）</td><td class="num"><b>29568 B</b></td>
+      <td class="num"><b>−6.2%</b></td><td>无</td></tr>
+  <tr><td>若只保留 arm64e 切片（+ 图标优化）</td><td class="num">22386 B</td>
+      <td class="num">−29.0%</td>
+      <td>A11 及更早（iPhone 8 / X）装得上但<b>静默不生效</b></td></tr>
+</table>
+<p>你当前选择的是保留双架构，因此交付 29568 B。这一版随时可以再出只留 arm64e 的版本 ——
+但那是一次真实的兼容性削减，需要你明确点头。</p>
+
+<h2>5. 验证：证明「只是小了，别的没变」</h2>
+
+<div class="verdict" style="border-left-color:var(--accent)">
+  <b>最小差异验证</b>：4.0.5 → 4.0.6 的全部差异<b>穷尽于</b>下列集合，别无其他。
+</div>
+
+<table>
+  <tr><th>差异位置</th><th>内容</th><th>判定</th></tr>
+  <tr><td>3 个图标 PNG</td><td>6013 → 3049 B</td><td><span class="tag t-ok">预期</span></td></tr>
+  <tr><td><code>control</code> 的 <code>Version:</code></td><td>4.0.5 → 4.0.6</td>
+      <td><span class="tag t-ok">预期</span></td></tr>
+  <tr><td><code>DonutPrefs</code> 每切片 <code>__TEXT</code></td><td><b>1 字节</b>：版本号 <code>'5'→'6'</code></td>
+      <td><span class="tag t-ok">预期</span></td></tr>
+  <tr><td><code>DonutPrefs</code> 每切片签名区</td><td><b>20 B</b>（SHA-1 页哈希）+ <b>32 B</b>（SHA-256 页哈希）</td>
+      <td><span class="tag t-ok">签名被正确重算</span></td></tr>
+  <tr><td><code>Donut.dylib</code></td><td><b>逐字节相同</b></td><td><span class="tag t-ok">注入体未变</span></td></tr>
+</table>
+
+<p style="color:var(--tx2);font-size:13.5px">
+说明：改版本号会让它所在那一页的代码哈希失效，两个 CodeDirectory（SHA-1 / SHA-256）都必须重算该页摘要 ——
+所以「20 B + 32 B」这两处差异正是<b>签名正确的证据</b>，不是问题。反过来说，
+若差异出现在 <code>LC_CODE_SIGNATURE</code> 之外又解释不清，就不该交付。
+</p>
+
+<h3>其余关卡</h3>
+<table>
+  <tr><th>#</th><th>关卡</th><th>脚本</th><th>结果</th></tr>
+  <tr><td>1</td><td>四维度代码审查</td><td><code>_fix2/review_all3.py</code></td><td><span class="tag t-ok">问题 0 项</span></td></tr>
+  <tr><td>2</td><td>功能专项验证</td><td><code>_fix2/verify_style20.py</code></td><td><span class="tag t-ok">FAIL 0</span></td></tr>
+  <tr><td>3</td><td>结构审计</td><td><code>scripts/audit.py</code></td><td><span class="tag t-ok">FAIL 0</span> <span class="tag t-warn">WARN 1</span></td></tr>
+  <tr><td>4</td><td>重定位校验</td><td><code>scripts/verify_reloc.py</code></td><td><span class="tag t-ok">FAIL 0</span></td></tr>
+  <tr><td>5</td><td>构建幂等</td><td><code>_fix2/idem406.py</code></td><td><span class="tag t-ok">三成员逐字节一致</span></td></tr>
+  <tr><td>6</td><td>最小差异</td><td><code>_fix2/diff_405_406.py</code></td><td><span class="tag t-ok">PASS</span></td></tr>
+</table>
+<p style="color:var(--tx2);font-size:13.5px">
+那条 WARN 是 audit 对 <code>Depends</code> 缺 <code>rootless-compat</code> 的泛化提示。
+本包实测 <code>/var/jb</code> 字面量 <b>0 处</b>、加载走 <code>@loader_path/.jbroot/…</code>，
+前提不成立 ⇒ <b>不需要加</b>（多一条依赖就多一个安装失败面）。
+</p>
+
+<h2>6. 交付与复现</h2>
+<table>
+  <tr><th>项</th><th>值</th></tr>
+  <tr><td>交付包</td><td><code>E:\deb\donut-bar406.deb</code></td></tr>
+  <tr><td>体积</td><td><b>29568 B</b></td></tr>
+  <tr><td>sha256</td><td><code>2d450e07229d120ade3ce772f44e5bc0c7e0901602d1f133dddc53580b08f608</code></td></tr>
+  <tr><td>构建入口</td><td><code>_fix2/patch_donut35.py</code>（由 <code>_fix2/apply_style22.py</code> 生成）</td></tr>
+  <tr><td>回退版本</td><td><code>E:\deb\donut-bar405.deb</code></td></tr>
+</table>
+
+<h3>复现命令</h3>
+<pre>PY="C:/Users/&lt;用户&gt;/.workbuddy/binaries/python/envs/default/Scripts/python.exe"
+
+# 先量体积构成（新技能 ios-deb-slim）
+PYTHONIOENCODING=utf-8 "$PY" ~/.workbuddy/skills/ios-deb-slim/scripts/deb_size_probe.py \
+        E:/deb/donut-bar406.deb
+
+# 图标档位试算
+PYTHONIOENCODING=utf-8 "$PY" ~/.workbuddy/skills/ios-deb-slim/scripts/png_slim.py icon@3x.png --grid
+
+# 验证
+PYTHONIOENCODING=utf-8 "$PY" _fix2/review_all3.py
+PYTHONIOENCODING=utf-8 "$PY" _fix2/verify_style20.py
+PYTHONIOENCODING=utf-8 "$PY" _fix2/diff_405_406.py
+PYTHONIOENCODING=utf-8 "$PY" _fix2/idem406.py
+PYTHONIOENCODING=utf-8 "$PY" &lt;技能目录&gt;/scripts/audit.py E:/deb/donut-bar406.deb E:/deb/_fix2/Donut_RootHide_2.0.3.deb
+PYTHONIOENCODING=utf-8 "$PY" &lt;技能目录&gt;/scripts/verify_reloc.py E:/deb/_fix2/Donut_RootHide_2.0.3.deb E:/deb/donut-bar406.deb</pre>
+
+<h2>7. 未做真机验证</h2>
+<p>本报告全部结论来自静态核验（体积量化、逐字节差异、结构审计、签名页哈希、构建幂等）。
+<strong>没有真机安装验证。</strong>若安装后出现异常，需要
+<code>/var/mobile/Library/Logs/CrashReporter/</code> 下的对应 <code>.ips</code> 日志定位。</p>
+
+<footer>
+  Donut-bar 4.0.6 · 体积精简报告 · 2026-09-26<br>
+  基于刀刀源的 Donut、BadgeBar 显示效果，并向所有贡献者致谢。
+</footer>
+
+</div>
+</body>
+</html>
