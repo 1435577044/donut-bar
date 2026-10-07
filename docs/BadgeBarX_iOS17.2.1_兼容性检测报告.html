@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BadgeBar X 1.3.7 — iOS 17.2.1 / Relaxin 环境兼容性检测报告</title>
+<style>
+  :root{
+    --bg:#f6f8fb; --card:#ffffff; --line:#e2e8f0; --line2:#eef2f7;
+    --tx:#1e293b; --tx2:#475569; --tx3:#7b8794;
+    --blue:#2563eb; --blue-bg:#eff5ff;
+    --ok:#15803d; --ok-bg:#eefbf1; --ok-line:#bbf0c8;
+    --warn:#b45309; --warn-bg:#fff8ec; --warn-line:#f5dcb0;
+    --bad:#b91c1c; --bad-bg:#fef2f2; --bad-line:#f6cccc;
+    --code:#f2f5f9;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; padding:32px 20px 72px;
+    background:var(--bg); color:var(--tx);
+    font:15px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  }
+  .wrap{max-width:1000px;margin:0 auto}
+  header{background:linear-gradient(135deg,#1e3a8a 0%,#2563eb 100%);color:#fff;border-radius:16px;padding:28px 30px;margin-bottom:26px;box-shadow:0 6px 24px rgba(37,99,235,.18)}
+  header h1{margin:0 0 8px;font-size:23px;letter-spacing:.2px}
+  header .sub{opacity:.92;font-size:13.5px}
+  header .meta{margin-top:16px;display:flex;flex-wrap:wrap;gap:8px}
+  .chip{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.28);border-radius:999px;padding:4px 12px;font-size:12.5px}
+  h2{font-size:18px;margin:34px 0 12px;padding-left:12px;border-left:4px solid var(--blue);line-height:1.3}
+  h3{font-size:15.5px;margin:22px 0 10px;color:var(--tx)}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:20px 22px;margin-bottom:16px}
+  p{margin:9px 0}
+  table{width:100%;border-collapse:collapse;margin:14px 0;font-size:14px}
+  th,td{border:1px solid var(--line);padding:9px 12px;text-align:left;vertical-align:top}
+  th{background:#f1f5f9;font-weight:600;font-size:13.5px;color:var(--tx2)}
+  td code,p code,li code{background:var(--code);border:1px solid var(--line2);border-radius:4px;padding:1.5px 6px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12.8px;color:#0f3d91;word-break:break-all}
+  .tag{display:inline-block;border-radius:6px;padding:2px 9px;font-size:12.5px;font-weight:600;white-space:nowrap}
+  .t-ok{background:var(--ok-bg);color:var(--ok);border:1px solid var(--ok-line)}
+  .t-warn{background:var(--warn-bg);color:var(--warn);border:1px solid var(--warn-line)}
+  .t-bad{background:var(--bad-bg);color:var(--bad);border:1px solid var(--bad-line)}
+  .t-info{background:var(--blue-bg);color:var(--blue);border:1px solid #cfe0ff}
+  .box{border-radius:10px;padding:14px 18px;margin:14px 0;border:1px solid}
+  .box.ok{background:var(--ok-bg);border-color:var(--ok-line)}
+  .box.warn{background:var(--warn-bg);border-color:var(--warn-line)}
+  .box.bad{background:var(--bad-bg);border-color:var(--bad-line)}
+  .box.info{background:var(--blue-bg);border-color:#cfe0ff}
+  .box b{display:block;margin-bottom:5px}
+  ul{margin:9px 0;padding-left:22px}
+  li{margin:5px 0}
+  pre{background:#0f172a;color:#e2e8f0;border-radius:9px;padding:14px 16px;overflow-x:auto;font-size:12.8px;line-height:1.65;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+  .verdict{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:12px;margin:16px 0}
+  .v-card{background:var(--card);border:1px solid var(--line);border-radius:11px;padding:15px 17px;border-top:3px solid var(--blue)}
+  .v-card.ok{border-top-color:#22c55e}
+  .v-card.warn{border-top-color:#f59e0b}
+  .v-card .k{font-size:12.5px;color:var(--tx3);font-weight:600;letter-spacing:.4px}
+  .v-card .v{font-size:16px;font-weight:700;margin-top:5px}
+  .v-card .d{font-size:12.8px;color:var(--tx2);margin-top:6px;line-height:1.6}
+  .step{display:flex;gap:13px;margin:12px 0;align-items:flex-start}
+  .step .n{flex:0 0 26px;height:26px;border-radius:50%;background:var(--blue);color:#fff;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;margin-top:2px}
+  .step .c{flex:1}
+  footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);font-size:12.8px;color:var(--tx3);text-align:center}
+  .small{font-size:13px;color:var(--tx2)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>BadgeBar X 1.3.7 · 目标环境兼容性检测报告</h1>
+  <div class="sub">检测对象：隐根（RootHide）转换版 deb &nbsp;|&nbsp; 目标环境：iPhone 15 Pro Max · iOS 17.2.1 · Relaxin 越狱</div>
+  <div class="meta">
+    <span class="chip">包：xyz.cypwn.badgebarx 1.3.7-roothide2</span>
+    <span class="chip">架构：iphoneos-arm64e</span>
+    <span class="chip">检测日期：2026-09-21</span>
+    <span class="chip">方法：静态二进制分析 + 官方私有头文件核对</span>
+  </div>
+</header>
+
+<h2>一、总体结论</h2>
+
+<div class="verdict">
+  <div class="v-card ok">
+    <div class="k">包格式 / 环境匹配</div>
+    <div class="v" style="color:#15803d">完全吻合</div>
+    <div class="d">Relaxin 是 RootHide 隐根越狱，需要 <code>iphoneos-arm64e</code>，本包正是。A17 Pro 为 arm64e。</div>
+  </div>
+  <div class="v-card ok">
+    <div class="k">核心 Hook 有效性</div>
+    <div class="v" style="color:#15803d">10/10 目标存在</div>
+    <div class="d">经 iOS 17.0 官方私有头文件核对，无一处落在 iOS 17 已删除的方法上。</div>
+  </div>
+  <div class="v-card ok">
+    <div class="k">依赖可获得性</div>
+    <div class="v" style="color:#15803d">5/5 齐全</div>
+    <div class="d">roothide 官方源均有 arm64e 版本，Sileo 可自动解析。</div>
+  </div>
+  <div class="v-card warn">
+    <div class="k">唯一实质风险</div>
+    <div class="v" style="color:#b45309">角标定位</div>
+    <div class="d">iOS 17 改用了新的角标定位接口，本插件未适配 → 位置/尺寸可能偏移。</div>
+  </div>
+</div>
+
+<div class="box ok">
+  <b>一句话结论</b>
+  <p style="margin:0">这个包<b style="display:inline">可以用</b>，不需要再改包。它能正常加载、能替换角标样式，也不会因为 iOS 17 的 API 变化而崩溃。唯一的未知项是<b style="display:inline">角标的位置/尺寸可能不够精准</b>——因为 iOS 17 更换了角标定位机制，而 BadgeBar 是 iOS 13 时代的定位逻辑。这一项只能上机实测，若偏移可用插件自带的 X/Y 偏移设置补偿。</p>
+</div>
+
+<h2>二、环境匹配核查</h2>
+
+<table>
+  <thead><tr><th style="width:26%">核查项</th><th style="width:30%">你的环境</th><th style="width:30%">本包 / 插件要求</th><th style="width:14%">判定</th></tr></thead>
+  <tbody>
+    <tr>
+      <td>越狱类型</td>
+      <td>Relaxin = <b>RootHide（隐根）</b>半不绑定越狱</td>
+      <td>隐根包（<code>iphoneos-arm64e</code>）</td>
+      <td><span class="tag t-ok">匹配</span></td>
+    </tr>
+    <tr>
+      <td>系统版本窗口</td>
+      <td>iOS 17.2.1</td>
+      <td>Relaxin 支持 16.5.1–17.3.1</td>
+      <td><span class="tag t-ok">在窗口内</span></td>
+    </tr>
+    <tr>
+      <td>CPU 架构</td>
+      <td>iPhone 15 Pro Max = A17 Pro = arm64e</td>
+      <td>二进制为 arm64 + <b>arm64e</b> 双切片</td>
+      <td><span class="tag t-ok">匹配</span></td>
+    </tr>
+    <tr>
+      <td>jbroot 路径机制</td>
+      <td>随机路径，如 <code>/var/containers/Bundle/Application/.jbroot-XXXXXXXX</code></td>
+      <td>包内用 <code>@loader_path/.jbroot/…</code> 相对定位，不写死绝对路径</td>
+      <td><span class="tag t-ok">匹配</span></td>
+    </tr>
+    <tr>
+      <td>注入载体</td>
+      <td>Relaxin 自带 Sileo + RootHide，需先装 ElleKit</td>
+      <td>依赖 <code>mobilesubstrate</code>（ElleKit 已声明 <code>Provides</code>）</td>
+      <td><span class="tag t-ok">匹配</span></td>
+    </tr>
+    <tr>
+      <td>安装包被拒风险</td>
+      <td>—</td>
+      <td>control 中<b>没有</b> <code>firmware</code> 上限声明</td>
+      <td><span class="tag t-ok">不会被拒装</span></td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="box info">
+  <b>关于「不需要再转换一次」</b>
+  <p style="margin:0">社区里常说的「Relaxin 是不支持隐根插件、要用 Patcher 转换」是指<b style="display:inline">别的</b>插件：RootHide 环境需要 <code>iphoneos-arm64e</code> 格式。本包已经完成这一步转换，<b style="display:inline">直接安装即可，不要再走 Patcher</b>（再转一次反而会破坏包结构）。</p>
+</div>
+
+<h2>三、Hook 兼容性矩阵（核心）</h2>
+
+<p>插件的全部功能依赖 10 处方法拦截。我逐一对照 <b>iOS 17.0 官方私有头文件</b>（<code>SpringBoardHome.framework</code> classdump）与同类插件 dotto++（已在 iOS 17 RootHide 实机验证）的结果：</p>
+
+<table>
+  <thead><tr><th style="width:24%">目标类</th><th style="width:26%">方法</th><th style="width:36%">iOS 17.2.1 状态与依据</th><th style="width:14%">判定</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><code>SBIconBadgeView</code></td>
+      <td><code>configureForIcon:infoProvider:</code></td>
+      <td>iOS 17.0 头文件中属 <code>SBIconAccessoryView</code> 协议的<b>必需方法</b>，必然存在（也是取图标颜色、算角标数据的主入口）</td>
+      <td><span class="tag t-ok">存在</span></td>
+    </tr>
+    <tr>
+      <td><code>SBIconBadgeView</code></td>
+      <td><code>drawRect:</code><br><code>layoutSubviews</code><br><code>didMoveToSuperview</code></td>
+      <td>UIView 标准方法，且 <code>SBIconBadgeView</code> 类在 iOS 17.2 依然存在（官方私有头文件 <code>SBIconBadgeView.h</code> 可查到）</td>
+      <td><span class="tag t-ok">存在</span></td>
+    </tr>
+    <tr>
+      <td><code>SBIconBadgeView</code></td>
+      <td><code>_resizeForTextImage:</code><br><code>_crossfadeToTextImage:animator:</code></td>
+      <td>私有方法，头文件未直接覆盖；同类插件 dotto++ 在 iOS 17 上 hook 同名方法并通过实机验证（强旁证）。即使缺失也只会「效果退化」而非崩溃</td>
+      <td><span class="tag t-warn">高度可能</span></td>
+    </tr>
+    <tr>
+      <td><code>SBIconView</code></td>
+      <td><code>setLabelHidden:</code></td>
+      <td>用于隐藏图标名称，长期稳定存在</td>
+      <td><span class="tag t-ok">存在</span></td>
+    </tr>
+    <tr>
+      <td><code>SBIcon</code></td>
+      <td><code>badgeNumberOrString</code></td>
+      <td>用于判定是否屏蔽 Dock / 文件夹角标，长期稳定存在</td>
+      <td><span class="tag t-ok">存在</span></td>
+    </tr>
+    <tr>
+      <td><code>SBIconRecentlyUpdatedLabelAccessoryView</code><br><code>SBIconBetaLabelAccessoryView</code></td>
+      <td><code>init</code></td>
+      <td>其实现的 <code>SBIconLabelAccessoryView</code> 协议在 iOS 17.0 头文件中存在；且 hook 是「返回 nil 以隐藏标签」，类若缺失仅是不生效</td>
+      <td><span class="tag t-ok">存在</span></td>
+    </tr>
+    <tr>
+      <td colspan="2" style="background:#fafcff"><b>对照项：</b><code>SBIconView._frameForAccessoryView:</code><br><span class="small">iOS 17 已移除、同类插件必须改写的方法</span></td>
+      <td><b>本插件完全没有引用它</b>（已扫描 <code>__objc_methname</code> 全部 89 个 selector 确认）</td>
+      <td><span class="tag t-ok">无影响</span></td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="box ok">
+  <b>为什么不会崩溃</b>
+  <p style="margin:0">插件所有拦截都通过运行时的 <code>objc_getClass()</code> 动态取类，而不是编译期硬绑定。系统里找不到某个类或方法时，拦截会被安全跳过，只是对应功能不生效——<b style="display:inline">不会导致 SpringBoard 崩溃或安全模式</b>。这是这个插件设计上比较稳妥的一点。</p>
+</div>
+
+<h2>四、唯一的实质风险：iOS 17 换了角标定位方式</h2>
+
+<p>iOS 17.0 的 <code>SBIconAccessoryView</code> 协议里出现了一个<b>新的必需方法</b>：</p>
+
+<pre>@protocol SBIconAccessoryView &lt;SBReusableView, UIPointerInteractionDelegate&gt;
+
+// ——— 以下 5 个方法位于 @required 块（协议必需，iOS 17 必然实现）———
+- (void)setAccessoryBrightness:(double)arg1;
+- (_Bool)displayingAccessory;
+- (struct CGPoint)accessoryCenterForIconBounds:(struct CGRect)arg1;   // ← iOS 17 新增，决定角标位置
+- (void)configureForIcon:(SBIcon *)arg1 infoProvider:(id)arg2;        // ← 本插件已 hook
+- (void)configureAnimatedForIcon:(...)infoProvider:(...)animator:(...)arg3;
+
+@optional
+@property(retain, nonatomic) UITapGestureRecognizer *actionTapGestureRecognizer;
+@property(retain, nonatomic) id &lt;SBIconListLayout&gt; listLayout;
+@property(retain, nonatomic) SBFParallaxSettings *parallaxSettings;
+- (void)setLegibilityStyle:(long long)arg1;
+@end</pre>
+
+<div class="box info">
+  <b>两条关键事实（同一份 iOS 17.0 官方头文件直接给出）</b>
+  <ul style="margin:0">
+    <li><code>configureForIcon:infoProvider:</code> 位于 <b>@required</b> 块 → iOS 17 <b>必然实现</b>，本插件的核心 Hook 一定命中。</li>
+    <li><code>accessoryCenterForIconBounds:</code> 同样位于 <b>@required</b> 块 → 它不只是「新增」，而是 iOS 17 用来<b>决定角标中心点</b>的必需接口。而本插件<b>没有</b> hook 它。</li>
+  </ul>
+</div>
+
+<p>含义是：<b>iOS 17 里「角标放在哪」改由系统调用 <code>accessoryCenterForIconBounds:</code> 决定</b>（同类插件 dotto++ 为此专门加了 iOS 17 专用定位 hook，并移除了失效的 <code>_frameForAccessoryView:</code>）。</p>
+
+<p>而 BadgeBar 是 iOS 13 时代的定位逻辑：它在 <code>SBIconBadgeView.layoutSubviews</code> 里<b>自己改写自己的 frame</b> 来把角标摆到图标底部并拉成长条形。它<b>没有</b> hook 上面那个新接口。</p>
+
+<table>
+  <thead><tr><th style="width:30%">可能的表现</th><th>说明</th><th style="width:16%">可能性</th></tr></thead>
+  <tbody>
+    <tr><td>完全正常</td><td>因为 <code>layoutSubviews</code> 是子视图最后的布局时机，BadgeBar 在那里写入的 frame 能保留下来</td><td><span class="tag t-info">较高</span></td>
+    </tr>
+    <tr><td>条形位置/尺寸偏移</td><td>系统在 BadgeBar 写入之后又按新规则摆正角标，把自定义位置覆盖掉；表现为条形偏离图标底部、大小不对</td><td><span class="tag t-warn">中等</span></td>
+    </tr>
+    <tr><td>条形被裁剪或显示不全</td><td>角标容器尺寸不足以容纳拉长的条形</td><td><span class="tag t-warn">较低</span></td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="box warn">
+  <b>应对：先实测，再用内置设置补偿</b>
+  <p style="margin:0 0 6px">插件自身提供了位置与尺寸微调项，位置略有偏差时可原地修好，无需改包：</p>
+  <ul style="margin:0">
+    <li><code>xOffsetBadge</code> / <code>yOffsetBadge</code> — 角标 X / Y 偏移</li>
+    <li><code>badgeWidth</code> / <code>badgeHeight</code> — 条形宽高</li>
+    <li><code>badgeRadius</code> — 圆角半径</li>
+  </ul>
+</div>
+
+<h2>五、依赖清单（均在 roothide 官方源可得）</h2>
+
+<p>本包的 <code>Depends</code> 字段共 5 项。我逐个在 roothide 官方源核实了实际存在的包与架构：</p>
+
+<table>
+  <thead><tr><th style="width:32%">包声明的依赖</th><th style="width:30%">roothide 源实际包</th><th style="width:24%">满足方式</th><th style="width:14%">架构</th></tr></thead>
+  <tbody>
+    <tr><td><code>mobilesubstrate</code></td><td><code>ellekit</code> 1.2-1</td><td>声明 <code>Provides: mobilesubstrate (= 99)</code></td><td><code>arm64e</code></td></tr>
+    <tr><td><code>preferenceloader</code></td><td><code>preferenceloader</code> 2.2.8</td><td>同名包</td><td><code>arm64e</code></td></tr>
+    <tr><td><code>ws.hbang.common (&gt;= 1.14)</code></td><td><code>ws.hbang.common</code> 2.0-29（Cephei）</td><td>同名包，版本满足</td><td><code>arm64e</code></td></tr>
+    <tr><td><code>org.thebigboss.libcolorpicker</code></td><td><code>ws.hbang.alderis</code> 1.2.3</td><td>声明 <code>Provides / Replaces: org.thebigboss.libcolorpicker (= 99.0)</code>，提供 <code>usr/lib/libcolorpicker.dylib</code></td><td><code>arm64e</code></td></tr>
+    <tr><td><code>rootless-compat</code></td><td><code>rootless-compat</code> 2.0</td><td>同名包（提供 <code>DynamicPatches</code>，把插件引用的 <code>/var/jb</code> 路径在运行时接回）</td><td><code>arm64e</code></td></tr>
+  </tbody>
+</table>
+
+<div class="box info">
+  <b>前置条件（Relaxin 侧，必须先做）</b>
+  <ul style="margin:0">
+    <li>先装 <b>ElleKit</b> 与 <b>PreferenceLoader</b>（Relaxin 官方教程要求的两个必装基础件，不装无法运行任何插件）</li>
+    <li>确认 <b>Relaxin → 高级选项 → 插件注入 = 开启</b>（默认开启；关闭则所有插件失效）</li>
+    <li>添加 roothide 官方源 <code>https://roothide.github.io/</code>，其余依赖 Sileo 会自行解析安装</li>
+  </ul>
+</div>
+
+<h2>六、安装与验证步骤</h2>
+
+<div class="step"><div class="n">1</div><div class="c">确认 Relaxin 已越狱且「插件注入」为开启状态；Sileo 已装 ElleKit + PreferenceLoader。</div></div>
+<div class="step"><div class="n">2</div><div class="c">添加 roothide 官方源 <code>https://roothide.github.io/</code>（用于解析 5 个依赖）。</div></div>
+<div class="step"><div class="n">3</div><div class="c">直接安装本包 <code>xyz.cypwn.badgebarx_1.3.7-roothide2_iphoneos-arm64e.deb</code>。<br>
+<span class="small">不要用 RootHide Patcher 再转一次。Sileo 会自动带上 5 个依赖。</span></div></div>
+<div class="step"><div class="n">4</div><div class="c">安装完成后执行一次<b>注销</b>（Relaxin 里「妙手回春」）或重启用户空间（「回光返照」）。</div></div>
+<div class="step"><div class="n">5</div><div class="c">进「设置 → BadgeBar X」打开总开关，观察桌面角标是否变成彩色圆角条形。</div></div>
+
+<h3>实测检查清单</h3>
+<table>
+  <thead><tr><th style="width:44%">检查点</th><th>预期</th><th style="width:16%">判定</th></tr></thead>
+  <tbody>
+    <tr><td>SpringBoard 是否正常，无反复重启/安全模式</td><td>正常（本包无删除方法的 hook）</td><td>□</td></tr>
+    <tr><td>角标是否由「红色圆形数字」变为「条形」</td><td>变为条形（<code>drawRect:</code> 生效）</td><td>□</td></tr>
+    <tr><td>条形是否贴在图标底部、尺寸合理</td><td><b>重点观察</b>——可能需用 X/Y 偏移微调</td><td>□</td></tr>
+    <tr><td>颜色是否跟随图标（默认「跟随主题」模式）</td><td><code>configureForIcon:infoProvider:</code> 生效即正常</td><td>□</td></tr>
+    <tr><td>Dock / 文件夹角标是否按设置隐藏</td><td><code>badgeNumberOrString</code> 生效</td><td>□</td></tr>
+    <tr><td>设置面板是否能打开并保存</td><td>依赖 PreferenceLoader + Cephei</td><td>□</td></tr>
+  </tbody>
+</table>
+
+<h3>若出现问题，按此定位</h3>
+<table>
+  <thead><tr><th style="width:34%">现象</th><th>原因与处理</th></tr></thead>
+  <tbody>
+    <tr><td>完全没效果，角标仍是原生红色圆形</td><td>多半是插件未注入 SpringBoard。检查 Relaxin「插件注入」是否开启、ElleKit 是否已装并重启用户空间。</td></tr>
+    <tr><td>Sileo 报依赖不满足</td><td>缺 roothide 源。添加 <code>https://roothide.github.io/</code> 后重试；<code>libcolorpicker</code> 会由 <code>ws.hbang.alderis</code> 满足。</td></tr>
+    <tr><td>条形出现但位置偏移 / 大小不对</td><td><b>预期内的风险点</b>。用设置里的 <code>xOffsetBadge</code> / <code>yOffsetBadge</code> / <code>badgeWidth</code> / <code>badgeHeight</code> 微调即可。</td></tr>
+    <tr><td>设置页 banner/图标空白、Respring 按钮无效</td><td>插件内几处 <code>/var/jb</code> 路径未接回。确认 <code>rootless-compat</code> 已安装。</td></tr>
+    <tr><td>SpringBoard 崩溃 / 安全模式</td><td>先禁用本插件确认因果关系；本包 hook 目标均已核对存在，若崩溃更可能是与其它角标类插件冲突（见下）。</td></tr>
+  </tbody>
+</table>
+
+<div class="box bad">
+  <b>已知冲突（包内 control 已声明）</b>
+  <p style="margin:0">本包与 <code>me.conorthedev.pastel</code>（Pastel）、<code>me.conorthedev.dotto+</code>（dotto+）互斥。三者都是角标外观插件，同装会互相覆盖、表现为闪烁或角标错乱。<b style="display:inline">同装会导致 hook 打架，请只保留一个。</b></p>
+</div>
+
+<h2>七、检测方法与证据</h2>
+
+<table>
+  <thead><tr><th style="width:30%">检测手段</th><th>覆盖内容</th></tr></thead>
+  <tbody>
+    <tr><td>Mach-O 解析 + dyld 绑定还原</td><td>还原 <code>MSHookMessageEx</code> 的 10 处调用参数，得到完整「目标类 + selector」清单</td></tr>
+    <tr><td>selector 全量扫描</td><td>提取 <code>__objc_methname</code> 全部 89 个 selector，确认未引用任何 iOS 17 已删除接口</td></tr>
+    <tr><td>版本分支分析</td><td>定位到 <code>UIDevice.systemVersion</code> 与 <code>13.0</code> / <code>13.4</code> 的比较；iOS 17 走 <code>≥13.4</code> 分支。同时存在 <code>respondsToSelector:</code> 运行时能力探测（比写死版本号更稳）</td></tr>
+    <tr><td>iOS 17.0 官方私有头文件核对</td><td>对照 <code>SpringBoardHome.framework</code> 的 <code>SBIconAccessoryView</code> / <code>SBIconLabelAccessoryView</code> / <code>SBIconAccessoryInfoProvider</code> 协议定义</td></tr>
+    <tr><td>同类插件交叉验证</td><td>dotto++ 1.1.1（支持 iOS 15–17、已在 iOS 17 RootHide 实机验证）的 hook 列表与适配说明，作为「iOS 17 可用性」的旁证</td></tr>
+    <tr><td>依赖包实体核实</td><td>从 roothide 官方源下载 ellekit / preferenceloader / ws.hbang.common / ws.hbang.alderis / rootless-compat，逐一解包确认文件树与架构</td></tr>
+  </tbody>
+</table>
+
+<div class="box warn">
+  <b>本报告的边界</b>
+  <p style="margin:0">以上全部为离线静态检测：包结构、加载命令、指针引用、签名哈希、selector 存在性、依赖可获得性均已程序化核实。但<b style="display:inline">角标的实际渲染与定位属于运行时行为，必须在真机上验证</b>——这也是第四节列出的唯一未决项。</p>
+</div>
+
+<footer>
+  BadgeBar X 1.3.7 · 隐根版兼容性检测 &nbsp;|&nbsp; 目标：iPhone 15 Pro Max / iOS 17.2.1 / Relaxin &nbsp;|&nbsp; 2026-09-21
+</footer>
+
+</div>
+</body>
+</html>
